@@ -1,0 +1,10 @@
+{
+  "id": "vault-dashboard",
+  "name": "Vault Dashboard",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Interactive dashboard with vault stats, knowledge graph, tag cloud, and recent files.",
+  "author": "Demo",
+  "authorUrl": "",
+  "isDesktopOnly": false
+}

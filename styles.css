@@ -1,0 +1,232 @@
+/* ── Root layout ──────────────────────────────────────────────────────────── */
+
+.vd-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  gap: 18px;
+  box-sizing: border-box;
+  background: var(--background-primary);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+
+.vd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vd-title {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--text-normal);
+  letter-spacing: 0.02em;
+}
+
+.vd-btn {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 5px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s;
+}
+
+.vd-btn:hover {
+  opacity: 0.85;
+}
+
+/* ── Stats grid ───────────────────────────────────────────────────────────── */
+
+.vd-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.vd-stat {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 18px 12px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.vd-stat:hover {
+  border-color: var(--interactive-accent);
+}
+
+.vd-stat-value {
+  font-size: 1.9em;
+  font-weight: 700;
+  color: var(--interactive-accent);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.vd-stat-label {
+  font-size: 0.75em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── Section label ────────────────────────────────────────────────────────── */
+
+.vd-section-label {
+  font-size: 0.78em;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+/* ── Knowledge graph ──────────────────────────────────────────────────────── */
+
+.vd-graph-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vd-graph-hint {
+  font-size: 0.72em;
+  color: var(--text-faint);
+  letter-spacing: 0.02em;
+}
+
+.vd-canvas-wrap {
+  height: 340px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--background-modifier-border);
+  position: relative;
+}
+
+.vd-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+
+.vd-canvas:active {
+  cursor: grabbing;
+}
+
+/* ── Bottom panels ────────────────────────────────────────────────────────── */
+
+.vd-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.vd-panel {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 160px;
+}
+
+/* ── Tag cloud ────────────────────────────────────────────────────────────── */
+
+.vd-tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: baseline;
+}
+
+.vd-tag-chip {
+  color: var(--interactive-accent);
+  cursor: default;
+  font-weight: 500;
+  transition: opacity 0.15s;
+  line-height: 1.4;
+}
+
+.vd-tag-chip:hover {
+  opacity: 1 !important;
+  text-decoration: underline;
+}
+
+/* ── Recent files ─────────────────────────────────────────────────────────── */
+
+.vd-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vd-recent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.vd-recent-row:last-child {
+  border-bottom: none;
+}
+
+.vd-recent-name {
+  font-size: 0.88em;
+  color: var(--text-normal);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  transition: color 0.15s;
+}
+
+.vd-recent-name:hover {
+  color: var(--interactive-accent);
+}
+
+.vd-recent-age {
+  font-size: 0.75em;
+  color: var(--text-faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+
+.vd-empty {
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 0.88em;
+}
+
+/* ── Responsive: narrow pane ──────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .vd-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .vd-bottom {
+    grid-template-columns: 1fr;
+  }
+}

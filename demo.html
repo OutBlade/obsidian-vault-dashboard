@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vault Dashboard — Live Demo</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #1e1e2e;
+  --surface:  #181825;
+  --overlay:  #313244;
+  --border:   #45475a;
+  --text:     #cdd6f4;
+  --muted:    #7f849c;
+  --faint:    #45475a;
+  --accent:   #cba6f7;
+  --blue:     #89b4fa;
+  --green:    #a6e3a1;
+  --yellow:   #f9e2af;
+  --orange:   #fab387;
+  --red:      #f38ba8;
+  --teal:     #94e2d5;
+  --sky:      #89dceb;
+  --pink:     #f5c2e7;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────────── */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0;
+}
+
+.app-title {
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.vault-name {
+  font-size: 0.78em;
+  color: var(--muted);
+  background: var(--overlay);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: var(--overlay);
+  color: var(--text);
+}
+.btn-secondary:hover { background: var(--border); }
+
+/* ── Stats bar ───────────────────────────────────────────────────────────── */
+
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.stat-card {
+  padding: 14px 20px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.stat-card:last-child { border-right: none; }
+.stat-card:hover { background: var(--overlay); }
+
+.stat-value {
+  font-size: 1.7em;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 3px;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+
+.stat-value.flash { color: var(--green); }
+
+.stat-label {
+  font-size: 0.71em;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+
+.main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  grid-template-rows: 1fr auto;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* ── Graph panel ─────────────────────────────────────────────────────────── */
+
+.graph-panel {
+  position: relative;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.graph-header {
+  position: absolute;
+  top: 12px; left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-label {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.graph-hint {
+  font-size: 0.68em;
+  color: var(--faint);
+}
+
+.graph-controls {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ctrl-btn {
+  width: 28px; height: 28px;
+  background: var(--overlay);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+.ctrl-btn:hover { background: var(--border); }
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+canvas:active { cursor: grabbing; }
+
+/* ── Legend ──────────────────────────────────────────────────────────────── */
+
+.legend {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  z-index: 10;
+  background: rgba(24,24,37,0.88);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72em;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 4px;
+  transition: background 0.15s;
+}
+.legend-row:hover { background: var(--overlay); color: var(--text); }
+.legend-row.dimmed { opacity: 0.35; }
+
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Note tooltip ────────────────────────────────────────────────────────── */
+
+.tooltip {
+  position: absolute;
+  background: var(--overlay);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  pointer-events: none;
+  z-index: 20;
+  max-width: 220px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.tooltip.visible { opacity: 1; }
+.tooltip-name { font-weight: 700; font-size: 0.9em; margin-bottom: 4px; }
+.tooltip-meta { font-size: 0.75em; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
+.tooltip-tag { color: var(--accent); }
+
+/* ── Side panel ──────────────────────────────────────────────────────────── */
+
+.side {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.side-section {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+  min-height: 0;
+}
+.side-section:last-child { border-bottom: none; }
+
+.side-label {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 6px;
+  align-items: baseline;
+  overflow-y: auto;
+}
+
+.tag-chip {
+  color: var(--accent);
+  font-weight: 500;
+  cursor: default;
+  line-height: 1.4;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.tag-chip:hover { opacity: 1 !important; text-decoration: underline; }
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow-y: auto;
+}
+
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--faint);
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 4px;
+  padding-left: 4px;
+}
+.recent-row:last-child { border-bottom: none; }
+.recent-row:hover { background: var(--overlay); }
+
+.recent-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.recent-name {
+  font-size: 0.86em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.recent-age {
+  font-size: 0.72em;
+  color: var(--faint);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Activity feed at bottom ─────────────────────────────────────────────── */
+
+.activity-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  grid-column: 1 / -1;
+}
+
+.activity-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.activity-text {
+  font-size: 0.75em;
+  color: var(--muted);
+}
+
+/* ── New note animation ──────────────────────────────────────────────────── */
+
+@keyframes popIn {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">◈</div>
+    <span class="app-title">Vault Dashboard</span>
+    <span class="vault-name">demo-vault</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-secondary" id="btnReset">Reset View</button>
+    <button class="btn btn-secondary" id="btnToggleLabels">Hide Labels</button>
+    <button class="btn btn-primary" id="btnSimulate">+ Simulate Writing</button>
+  </div>
+</div>
+
+<!-- Stats bar -->
+<div class="stats-bar">
+  <div class="stat-card">
+    <div class="stat-value" id="statNotes">0</div>
+    <div class="stat-label">Notes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statWords">0</div>
+    <div class="stat-label">Words (est.)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statLinks">0</div>
+    <div class="stat-label">Links</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" id="statTags">0</div>
+    <div class="stat-label">Unique Tags</div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+  <!-- Graph -->
+  <div class="graph-panel" id="graphPanel">
+    <div class="graph-header">
+      <span class="section-label">Knowledge Graph</span>
+      <span class="graph-hint">Drag nodes · Scroll to zoom · Pan · Double-click to inspect</span>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <canvas id="canvas"></canvas>
+
+    <div class="graph-controls">
+      <button class="ctrl-btn" id="zoomIn" title="Zoom in">+</button>
+      <button class="ctrl-btn" id="zoomOut" title="Zoom out">−</button>
+      <button class="ctrl-btn" id="zoomFit" title="Fit all">⊡</button>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+      <div class="tooltip-name" id="ttName"></div>
+      <div class="tooltip-meta" id="ttMeta"></div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="side">
+    <div class="side-section">
+      <div class="side-label">Top Tags</div>
+      <div class="tag-cloud" id="tagCloud"></div>
+    </div>
+    <div class="side-section">
+      <div class="side-label">Recently Modified</div>
+      <div class="recent-list" id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- Activity bar spanning full width -->
+  <div class="activity-bar">
+    <div class="activity-dot"></div>
+    <span class="activity-text" id="activityText">Vault loaded — 0 notes indexed</span>
+  </div>
+</div>
+
+<script>
+// ── Vault data ─────────────────────────────────────────────────────────────
+
+const TOPICS = [
+  {
+    name: "Programming",
+    color: "#89b4fa",
+    tags: ["#javascript", "#python", "#algorithms", "#web-dev", "#code"],
+    notes: ["JavaScript Promises", "React Hooks", "Algorithm Complexity", "Clean Code", "Database Indexing",
+            "REST vs GraphQL", "Docker Basics", "Git Workflow", "Testing Strategies", "TypeScript Generics",
+            "Async Patterns", "Performance Tuning", "CSS Architecture", "Node.js Streams"],
+  },
+  {
+    name: "Philosophy",
+    color: "#cba6f7",
+    tags: ["#philosophy", "#ethics", "#stoicism", "#epistemology", "#metaphysics"],
+    notes: ["Stoic Daily Practices", "The Problem of Evil", "Knowledge vs Belief", "Free Will Debate",
+            "Consciousness Notes", "Social Contract", "Existentialism", "Buddhist Ethics",
+            "Kant's Imperatives", "Plato's Republic"],
+  },
+  {
+    name: "Writing",
+    color: "#a6e3a1",
+    tags: ["#writing", "#essays", "#fiction", "#prose", "#craft"],
+    notes: ["Story Structure", "Character Development", "Show Don't Tell", "Dialogue Techniques",
+            "First Draft Tips", "Revision Process", "World Building", "Voice and Style",
+            "Pacing in Fiction", "The Essay Form"],
+  },
+  {
+    name: "Daily Notes",
+    color: "#f9e2af",
+    tags: ["#daily", "#journal", "#reflection", "#log"],
+    notes: ["2024-11-01", "2024-11-04", "2024-11-07", "2024-11-12", "2024-11-18",
+            "2024-11-22", "2024-11-25", "2024-12-01", "2024-12-05", "2024-12-09",
+            "2024-12-14", "2024-12-19"],
+  },
+  {
+    name: "Books",
+    color: "#94e2d5",
+    tags: ["#books", "#reading", "#reviews", "#literature"],
+    notes: ["Atomic Habits Review", "Deep Work Summary", "The Pragmatic Programmer",
+            "Thinking Fast and Slow", "Man's Search for Meaning", "The War of Art",
+            "On Writing Well", "Meditations — Marcus Aurelius", "Dune Notes"],
+  },
+  {
+    name: "Projects",
+    color: "#fab387",
+    tags: ["#projects", "#planning", "#ideas", "#product"],
+    notes: ["Blog Redesign", "Language Learning App", "Note-taking System",
+            "Home Automation", "Portfolio Site", "Side Project Ideas",
+            "Career Roadmap", "Open Source Contributions"],
+  },
+  {
+    name: "Science",
+    color: "#89dceb",
+    tags: ["#science", "#math", "#physics", "#biology", "#stats"],
+    notes: ["Quantum Entanglement", "Evolution Overview", "Calculus Notes",
+            "Linear Algebra", "Statistics Foundations", "Neuroscience Basics",
+            "Climate Systems", "Special Relativity", "Information Theory"],
+  },
+  {
+    name: "Personal",
+    color: "#f38ba8",
+    tags: ["#personal", "#goals", "#habits", "#health"],
+    notes: ["Morning Routine", "Annual Goals 2024", "Reading List", "Exercise Log",
+            "Gratitude Practice", "Values Clarification", "Sleep Optimization", "Diet Notes"],
+  },
+];
+
+// ── Generate vault ─────────────────────────────────────────────────────────
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randFloat(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+let noteIdCounter = 0;
+
+function makeNote(name, topicIndex, isHub = false) {
+  const topic = TOPICS[topicIndex];
+  const tags = isHub
+    ? topic.tags.slice(0, 3)
+    : [topic.tags[rand(0, topic.tags.length - 1)]];
+  return {
+    id: noteIdCounter++,
+    name,
+    topicIndex,
+    tags,
+    wordCount: isHub ? rand(800, 2000) : rand(80, 600),
+    mtime: Date.now() - rand(0, 86400000 * 60),
+    isHub,
+    x: 0, y: 0, vx: 0, vy: 0,
+    degree: 0,
+    pinned: false,
+    popAnim: 0,
+  };
+}
+
+function generateVault() {
+  const notes = [];
+  const edges = [];
+  noteIdCounter = 0;
+
+  const hubIndices = [];
+
+  for (let ti = 0; ti < TOPICS.length; ti++) {
+    const topic = TOPICS[ti];
+    // Hub (MOC)
+    const hub = makeNote(`${topic.name} MOC`, ti, true);
+    hubIndices.push(notes.length);
+    notes.push(hub);
+
+    // Sub-notes
+    const subNotes = [...topic.notes];
+    for (const name of subNotes) {
+      const note = makeNote(name, ti, false);
+      notes.push(note);
+      edges.push({ a: hub.id, b: note.id });
+
+      // Intra-cluster links (30% chance)
+      const cluster = notes.filter(n => n.topicIndex === ti && n.id !== note.id && n.id !== hub.id);
+      if (cluster.length > 0 && Math.random() < 0.3) {
+        const peer = cluster[rand(0, cluster.length - 1)];
+        edges.push({ a: note.id, b: peer.id });
+      }
+    }
+  }
+
+  // Cross-topic links
+  const crossLinks = 18;
+  for (let i = 0; i < crossLinks; i++) {
+    const a = notes[rand(0, notes.length - 1)];
+    const b = notes[rand(0, notes.length - 1)];
+    if (a.id !== b.id && a.topicIndex !== b.topicIndex) {
+      edges.push({ a: a.id, b: b.id });
+    }
+  }
+
+  // Hub-to-hub links
+  for (let i = 0; i < hubIndices.length; i++) {
+    const j = (i + 1) % hubIndices.length;
+    edges.push({ a: notes[hubIndices[i]].id, b: notes[hubIndices[j]].id });
+  }
+
+  // Deduplicate edges and count degrees
+  const seenEdges = new Set();
+  const finalEdges = [];
+  for (const e of edges) {
+    const key = e.a < e.b ? `${e.a}-${e.b}` : `${e.b}-${e.a}`;
+    if (!seenEdges.has(key)) {
+      seenEdges.add(key);
+      finalEdges.push(e);
+      notes[e.a].degree++;
+      notes[e.b].degree++;
+    }
+  }
+
+  return { notes, edges: finalEdges };
+}
+
+// ── Physics simulation ─────────────────────────────────────────────────────
+
+function simulateStep(nodes, edges, idToIdx, W, H, alpha) {
+  const cx = W / 2, cy = H / 2;
+
+  // Repulsion
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[j].x - nodes[i].x;
+      const dy = nodes[j].y - nodes[i].y;
+      const d2 = dx * dx + dy * dy + 1;
+      const f = (2400 * alpha) / d2;
+      nodes[i].vx -= dx * f;
+      nodes[i].vy -= dy * f;
+      nodes[j].vx += dx * f;
+      nodes[j].vy += dy * f;
+    }
+  }
+
+  // Cluster attraction (nodes in same topic are softly pulled together)
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      if (nodes[i].topicIndex === nodes[j].topicIndex) {
+        const dx = nodes[j].x - nodes[i].x;
+        const dy = nodes[j].y - nodes[i].y;
+        const d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+        const f = (d - 50) / d * 0.015 * alpha;
+        nodes[i].vx += dx * f;
+        nodes[i].vy += dy * f;
+        nodes[j].vx -= dx * f;
+        nodes[j].vy -= dy * f;
+      }
+    }
+  }
+
+  // Spring edges
+  for (const edge of edges) {
+    const ai = idToIdx.get(edge.a), bi = idToIdx.get(edge.b);
+    if (ai === undefined || bi === undefined) continue;
+    const a = nodes[ai], b = nodes[bi];
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const d = Math.sqrt(dx * dx + dy * dy) + 0.01;
+    const target = a.isHub || b.isHub ? 85 : 70;
+    const f = ((d - target) / d) * 0.25 * alpha;
+    a.vx += dx * f; a.vy += dy * f;
+    b.vx -= dx * f; b.vy -= dy * f;
+  }
+
+  // Centering
+  for (const n of nodes) {
+    n.vx += (cx - n.x) * 0.007 * alpha;
+    n.vy += (cy - n.y) * 0.007 * alpha;
+  }
+
+  // Integrate
+  for (const n of nodes) {
+    if (n.pinned) continue;
+    n.vx *= 0.83; n.vy *= 0.83;
+    n.x = Math.max(14, Math.min(W - 14, n.x + n.vx));
+    n.y = Math.max(14, Math.min(H - 14, n.y + n.vy));
+  }
+}
+
+// ── App state ──────────────────────────────────────────────────────────────
+
+let vault = generateVault();
+let { notes, edges } = vault;
+
+let idToIdx = new Map(notes.map((n, i) => [n.id, i]));
+
+let pan = { x: 0, y: 0 };
+let zoom = 1;
+let alpha = 1;
+let raf = 0;
+let dragging = null;
+let panning = false;
+let lastMouse = { x: 0, y: 0 };
+let showLabels = true;
+let dimmedTopics = new Set();
+let hoveredNode = null;
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+// ── Initial node positions ─────────────────────────────────────────────────
+
+function initPositions() {
+  const W = canvas.parentElement.clientWidth;
+  const H = canvas.parentElement.clientHeight;
+  // Arrange clusters around a circle
+  const nTopics = TOPICS.length;
+  for (const n of notes) {
+    const angle = (n.topicIndex / nTopics) * Math.PI * 2;
+    const r = 180;
+    n.x = W / 2 + Math.cos(angle) * r + randFloat(-40, 40);
+    n.y = H / 2 + Math.sin(angle) * r + randFloat(-40, 40);
+  }
+}
+
+// ── Canvas sizing ──────────────────────────────────────────────────────────
+
+function resizeCanvas() {
+  const panel = canvas.parentElement;
+  canvas.width = panel.clientWidth;
+  canvas.height = panel.clientHeight;
+}
+
+// ── Hit test ───────────────────────────────────────────────────────────────
+
+function nodeRadius(n) {
+  return n.isHub ? 9 + Math.min(n.degree, 12) * 0.5 : 4 + Math.min(n.degree, 12) * 0.55;
+}
+
+function toWorld(cx, cy) {
+  return { x: (cx - pan.x) / zoom, y: (cy - pan.y) / zoom };
+}
+
+function hitTest(x, y) {
+  for (let i = notes.length - 1; i >= 0; i--) {
+    const n = notes[i];
+    const r = nodeRadius(n) + 5;
+    const dx = n.x - x, dy = n.y - y;
+    if (dx * dx + dy * dy < r * r) return n;
+  }
+  return null;
+}
+
+// ── Mouse events ───────────────────────────────────────────────────────────
+
+canvas.addEventListener("mousedown", (e) => {
+  const p = toWorld(e.offsetX, e.offsetY);
+  const hit = hitTest(p.x, p.y);
+  if (hit) {
+    dragging = hit;
+    hit.pinned = true;
+  } else {
+    panning = true;
+    lastMouse = { x: e.clientX, y: e.clientY };
+  }
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  if (dragging) {
+    const p = toWorld(e.offsetX, e.offsetY);
+    dragging.x = p.x; dragging.y = p.y;
+    dragging.vx = 0; dragging.vy = 0;
+    alpha = Math.max(alpha, 0.15);
+  } else if (panning) {
+    pan.x += e.clientX - lastMouse.x;
+    pan.y += e.clientY - lastMouse.y;
+    lastMouse = { x: e.clientX, y: e.clientY };
+  } else {
+    const p = toWorld(e.offsetX, e.offsetY);
+    const hit = hitTest(p.x, p.y);
+    if (hit !== hoveredNode) {
+      hoveredNode = hit;
+      showTooltip(hit, e.clientX, e.clientY);
+    }
+    if (hit) canvas.style.cursor = "pointer";
+    else canvas.style.cursor = panning ? "grabbing" : "grab";
+  }
+});
+
+canvas.addEventListener("mouseup", () => {
+  if (dragging) { dragging.pinned = false; dragging = null; }
+  panning = false;
+});
+
+canvas.addEventListener("mouseleave", () => {
+  hoveredNode = null;
+  document.getElementById("tooltip").classList.remove("visible");
+});
+
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const f = e.deltaY < 0 ? 1.1 : 0.9;
+  zoom = Math.max(0.08, Math.min(8, zoom * f));
+}, { passive: false });
+
+canvas.addEventListener("dblclick", (e) => {
+  const p = toWorld(e.offsetX, e.offsetY);
+  const hit = hitTest(p.x, p.y);
+  if (hit) showNoteInspector(hit);
+});
+
+// ── Tooltip ────────────────────────────────────────────────────────────────
+
+function showTooltip(node, mx, my) {
+  const tt = document.getElementById("tooltip");
+  if (!node) { tt.classList.remove("visible"); return; }
+
+  document.getElementById("ttName").textContent = node.name;
+  const meta = document.getElementById("ttMeta");
+  meta.innerHTML = `
+    <span>${TOPICS[node.topicIndex].name} ${node.isHub ? "· Hub" : ""}</span>
+    <span>${node.degree} connection${node.degree !== 1 ? "s" : ""}</span>
+    <span class="tooltip-tag">${node.tags.join("  ")}</span>
+    <span>~${node.wordCount} words</span>
+  `;
+
+  const panel = canvas.parentElement.getBoundingClientRect();
+  const tx = mx - panel.left + 14;
+  const ty = my - panel.top - 10;
+  tt.style.left = Math.min(tx, canvas.width - 235) + "px";
+  tt.style.top = Math.max(0, ty) + "px";
+  tt.classList.add("visible");
+}
+
+// ── Note inspector (double-click) ──────────────────────────────────────────
+
+function showNoteInspector(node) {
+  setActivity(`Opened "${node.name}" — ${node.degree} links, ${node.wordCount} words`);
+  // Highlight connected nodes briefly
+  const connectedIds = new Set();
+  for (const e of edges) {
+    if (e.a === node.id) connectedIds.add(e.b);
+    if (e.b === node.id) connectedIds.add(e.a);
+  }
+  // Flash connected nodes
+  for (const id of connectedIds) {
+    const idx = idToIdx.get(id);
+    if (idx !== undefined) notes[idx].popAnim = 1;
+  }
+}
+
+// ── Zoom controls ──────────────────────────────────────────────────────────
+
+document.getElementById("zoomIn").addEventListener("click", () => {
+  zoom = Math.min(8, zoom * 1.25);
+});
+document.getElementById("zoomOut").addEventListener("click", () => {
+  zoom = Math.max(0.08, zoom * 0.8);
+});
+document.getElementById("zoomFit").addEventListener("click", resetView);
+document.getElementById("btnReset").addEventListener("click", resetView);
+
+function resetView() {
+  pan = { x: 0, y: 0 };
+  zoom = 1;
+}
+
+// ── Toggle labels ──────────────────────────────────────────────────────────
+
+document.getElementById("btnToggleLabels").addEventListener("click", function() {
+  showLabels = !showLabels;
+  this.textContent = showLabels ? "Hide Labels" : "Show Labels";
+});
+
+// ── Legend ─────────────────────────────────────────────────────────────────
+
+function buildLegend() {
+  const legend = document.getElementById("legend");
+  legend.innerHTML = "";
+  TOPICS.forEach((topic, i) => {
+    const row = document.createElement("div");
+    row.className = "legend-row" + (dimmedTopics.has(i) ? " dimmed" : "");
+    row.innerHTML = `<div class="legend-dot" style="background:${topic.color}"></div>${topic.name}`;
+    row.addEventListener("click", () => {
+      if (dimmedTopics.has(i)) dimmedTopics.delete(i);
+      else dimmedTopics.add(i);
+      buildLegend();
+    });
+    legend.appendChild(row);
+  });
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+
+function updateStats() {
+  const totalWords = notes.reduce((s, n) => s + n.wordCount, 0);
+  const allTags = new Set(notes.flatMap(n => n.tags));
+
+  animateCount("statNotes", notes.length);
+  animateCount("statWords", totalWords);
+  animateCount("statLinks", edges.length);
+  animateCount("statTags", allTags.size);
+}
+
+function animateCount(id, target) {
+  const el = document.getElementById(id);
+  const current = parseInt(el.textContent.replace(/,/g, "")) || 0;
+  if (current === target) return;
+  el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 600);
+
+  const step = Math.ceil(Math.abs(target - current) / 20);
+  let val = current;
+  const interval = setInterval(() => {
+    val += val < target ? Math.min(step, target - val) : -Math.min(step, val - target);
+    el.textContent = val.toLocaleString();
+    if (val === target) clearInterval(interval);
+  }, 30);
+}
+
+// ── Tag cloud ──────────────────────────────────────────────────────────────
+
+function updateTagCloud() {
+  const freq = new Map();
+  for (const n of notes) {
+    for (const tag of n.tags) {
+      freq.set(tag, (freq.get(tag) || 0) + 1);
+    }
+  }
+  const sorted = [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
+  const max = sorted[0]?.[1] || 1;
+
+  const cloud = document.getElementById("tagCloud");
+  cloud.innerHTML = "";
+  for (const [tag, count] of sorted) {
+    const chip = document.createElement("span");
+    chip.className = "tag-chip";
+    chip.textContent = tag;
+    chip.style.fontSize = (0.75 + (count / max) * 0.65) + "em";
+    chip.style.opacity = String(0.45 + (count / max) * 0.55);
+    chip.title = `${count} note${count !== 1 ? "s" : ""}`;
+    cloud.appendChild(chip);
+  }
+}
+
+// ── Recent files ───────────────────────────────────────────────────────────
+
+function updateRecent() {
+  const recent = [...notes].sort((a, b) => b.mtime - a.mtime).slice(0, 12);
+  const list = document.getElementById("recentList");
+  list.innerHTML = "";
+  for (const n of recent) {
+    const row = document.createElement("div");
+    row.className = "recent-row";
+    const color = TOPICS[n.topicIndex].color;
+    row.innerHTML = `
+      <div class="recent-dot" style="background:${color}"></div>
+      <span class="recent-name">${n.name}</span>
+      <span class="recent-age">${formatAge(n.mtime)}</span>
+    `;
+    row.addEventListener("click", () => {
+      highlightNode(n.id);
+      setActivity(`Navigated to "${n.name}"`);
+    });
+    list.appendChild(row);
+  }
+}
+
+function formatAge(mtime) {
+  const m = Math.floor((Date.now() - mtime) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function highlightNode(id) {
+  const idx = idToIdx.get(id);
+  if (idx === undefined) return;
+  const n = notes[idx];
+  n.popAnim = 1.5;
+  // Pan to node
+  const W = canvas.width, H = canvas.height;
+  pan.x = W / 2 - n.x * zoom;
+  pan.y = H / 2 - n.y * zoom;
+}
+
+// ── Activity bar ───────────────────────────────────────────────────────────
+
+function setActivity(text) {
+  document.getElementById("activityText").textContent = text;
+}
+
+// ── Simulate writing ───────────────────────────────────────────────────────
+
+let simulateInterval = null;
+let simCount = 0;
+
+const NEW_NOTE_NAMES = [
+  "Shower Thoughts", "Meeting Notes", "Research Dump", "Idea Backlog",
+  "Reading Notes", "Code Snippet", "Question List", "Brain Dump",
+  "Weekly Review", "Quick Capture", "Fleeting Note", "Literature Note",
+  "Permanent Note", "Concept Map", "Reference Note", "Index Note",
+];
+
+document.getElementById("btnSimulate").addEventListener("click", function() {
+  if (simulateInterval) {
+    clearInterval(simulateInterval);
+    simulateInterval = null;
+    this.textContent = "+ Simulate Writing";
+    this.style.background = "";
+    setActivity("Simulation paused");
+    return;
+  }
+  this.textContent = "◼ Stop Simulation";
+  this.style.background = "var(--red)";
+
+  simulateInterval = setInterval(() => {
+    addNote();
+  }, 1200);
+  setActivity("Simulation running — adding notes to vault...");
+});
+
+function addNote() {
+  simCount++;
+  const topicIndex = rand(0, TOPICS.length - 1);
+  const name = NEW_NOTE_NAMES[simCount % NEW_NOTE_NAMES.length] + ` ${simCount}`;
+  const newNote = makeNote(name, topicIndex, false);
+  newNote.popAnim = 2;
+
+  // Position near a random existing node in the same topic
+  const peers = notes.filter(n => n.topicIndex === topicIndex);
+  if (peers.length > 0) {
+    const peer = peers[rand(0, peers.length - 1)];
+    newNote.x = peer.x + randFloat(-60, 60);
+    newNote.y = peer.y + randFloat(-60, 60);
+  } else {
+    newNote.x = canvas.width / 2 + randFloat(-150, 150);
+    newNote.y = canvas.height / 2 + randFloat(-150, 150);
+  }
+
+  notes.push(newNote);
+  idToIdx = new Map(notes.map((n, i) => [n.id, i]));
+
+  // Link to 1-2 peers
+  const linkTargets = peers.slice(0, 2);
+  for (const target of linkTargets) {
+    const key1 = `${newNote.id}-${target.id}`, key2 = `${target.id}-${newNote.id}`;
+    edges.push({ a: newNote.id, b: target.id });
+    newNote.degree++;
+    target.degree++;
+  }
+
+  alpha = Math.max(alpha, 0.4);
+  updateStats();
+  updateTagCloud();
+  updateRecent();
+  setActivity(`Created "${newNote.name}" in ${TOPICS[topicIndex].name}`);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#181825";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  ctx.translate(pan.x, pan.y);
+  ctx.scale(zoom, zoom);
+
+  const maxDeg = Math.max(1, ...notes.map(n => n.degree));
+
+  // Find highlighted (connected to hovered) set
+  const highlightSet = new Set();
+  if (hoveredNode) {
+    highlightSet.add(hoveredNode.id);
+    for (const e of edges) {
+      if (e.a === hoveredNode.id) highlightSet.add(e.b);
+      if (e.b === hoveredNode.id) highlightSet.add(e.a);
+    }
+  }
+  const hasHighlight = highlightSet.size > 0;
+
+  // Edges
+  for (const edge of edges) {
+    const ai = idToIdx.get(edge.a), bi = idToIdx.get(edge.b);
+    if (ai === undefined || bi === undefined) continue;
+    const a = notes[ai], b = notes[bi];
+
+    const dimA = dimmedTopics.has(a.topicIndex);
+    const dimB = dimmedTopics.has(b.topicIndex);
+    if (dimA && dimB) continue;
+
+    const isHighlighted = hasHighlight && highlightSet.has(edge.a) && highlightSet.has(edge.b);
+    const isFaded = hasHighlight && !isHighlighted;
+
+    ctx.lineWidth = (isHighlighted ? 1.5 : 0.75) / zoom;
+    ctx.strokeStyle = isHighlighted
+      ? "rgba(203,166,247,0.7)"
+      : isFaded
+        ? "rgba(120,120,140,0.07)"
+        : "rgba(120,120,140,0.2)";
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+
+  // Nodes
+  for (const node of notes) {
+    const isDimmed = dimmedTopics.has(node.topicIndex);
+    const isFaded = hasHighlight && !highlightSet.has(node.id);
+    const r = nodeRadius(node);
+    const color = TOPICS[node.topicIndex].color;
+
+    const alpha2 = isDimmed ? 0.12 : isFaded ? 0.2 : 1;
+
+    ctx.globalAlpha = alpha2;
+
+    // Pop animation ring
+    if (node.popAnim > 0) {
+      const ring = r + node.popAnim * 10;
+      const grdRing = ctx.createRadialGradient(node.x, node.y, r, node.x, node.y, ring);
+      grdRing.addColorStop(0, color.replace(")", ",0.6)").replace("rgb", "rgba").replace("#", "").replace(/^(..)(..)(..)/, (_, r2, g2, b2) =>
+        `rgba(${parseInt(r2,16)},${parseInt(g2,16)},${parseInt(b2,16)},0.5)`));
+      grdRing.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, ring, 0, Math.PI * 2);
+      // simplified:
+      ctx.fillStyle = hexToRgba(color, 0.2 * node.popAnim);
+      ctx.fill();
+      node.popAnim = Math.max(0, node.popAnim - 0.04);
+    }
+
+    // Glow
+    const grd = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, r * 3.5);
+    grd.addColorStop(0, hexToRgba(color, node.isHub ? 0.35 : 0.2));
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r * 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    // Circle
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Hub ring
+    if (node.isHub) {
+      ctx.beginPath();
+      ctx.arc(node.x, node.y, r + 2.5, 0, Math.PI * 2);
+      ctx.strokeStyle = hexToRgba(color, 0.6);
+      ctx.lineWidth = 1.5 / zoom;
+      ctx.stroke();
+    }
+
+    // Specular
+    ctx.beginPath();
+    ctx.arc(node.x - r * 0.28, node.y - r * 0.28, r * 0.32, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.3)";
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+  }
+
+  // Labels
+  if (showLabels) {
+    for (const node of notes) {
+      if (dimmedTopics.has(node.topicIndex)) continue;
+      const isFaded = hasHighlight && !highlightSet.has(node.id);
+      if (isFaded && !node.isHub) continue;
+
+      const r = nodeRadius(node);
+      const isHub = node.isHub;
+      const showLabel = isHub || zoom > 0.55 || (hoveredNode && highlightSet.has(node.id));
+      if (!showLabel) continue;
+
+      const fontSize = Math.round(Math.max(7, Math.min(13, (isHub ? 12 : 10) / zoom)));
+      ctx.font = `${isHub ? "600 " : ""}${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.textAlign = "center";
+
+      const label = node.name.length > 24 ? node.name.slice(0, 22) + "…" : node.name;
+      const textAlpha = isHub ? 0.95 : isFaded ? 0.2 : 0.7;
+
+      // Text shadow
+      ctx.globalAlpha = textAlpha * 0.8;
+      ctx.fillStyle = "#181825";
+      ctx.fillText(label, node.x + 0.5, node.y + r + fontSize + 2.5);
+
+      ctx.globalAlpha = textAlpha;
+      ctx.fillStyle = isHub ? TOPICS[node.topicIndex].color : "#cdd6f4";
+      ctx.fillText(label, node.x, node.y + r + fontSize + 2);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  ctx.restore();
+}
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ── Main loop ──────────────────────────────────────────────────────────────
+
+function loop() {
+  if (alpha > 0.002) {
+    const W = canvas.width, H = canvas.height;
+    const steps = alpha > 0.7 ? 5 : alpha > 0.3 ? 3 : 1;
+    for (let i = 0; i < steps; i++) {
+      simulateStep(notes, edges, idToIdx, W, H, alpha);
+    }
+    alpha *= 0.993;
+  }
+  draw();
+  raf = requestAnimationFrame(loop);
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+
+window.addEventListener("resize", () => {
+  resizeCanvas();
+  alpha = Math.max(alpha, 0.3);
+});
+
+resizeCanvas();
+initPositions();
+buildLegend();
+updateStats();
+updateTagCloud();
+updateRecent();
+setActivity(`Vault loaded — ${notes.length} notes indexed, ${edges.length} links traced`);
+loop();
+</script>
+</body>
+</html>
