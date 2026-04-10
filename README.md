@@ -2,7 +2,7 @@
 
 **Live Demo:** [https://outblade.github.io/obsidian-vault-dashboard/demo.html](https://outblade.github.io/obsidian-vault-dashboard/demo.html)
 
-![Website Screenshot](screenshot.png)
+[![Website Screenshot](screenshot.png)](https://outblade.github.io/obsidian-vault-dashboard/demo.html)
 
 An Obsidian plugin that turns every new tab into a live analytics dashboard. Visualize your entire knowledge base as an interactive force-directed graph, track writing progress with real-time stats, explore your most-used tags, and navigate recently modified notes — all without leaving Obsidian.
 
